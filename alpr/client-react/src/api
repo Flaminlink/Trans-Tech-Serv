@@ -1,0 +1,29 @@
+const API = "http://localhost:3000";
+
+export const uploadVideo = async (formData) => {
+  const res = await fetch(`${API}/upload`, {
+    method: "POST",
+    body: formData
+  });
+  return res.json();
+};
+
+export const getDashboard = async () => {
+  return fetch(`${API}/dashboard`).then(r => r.json());
+};
+
+export const getIncidents = async () => {
+  return fetch(`${API}/verify`).then(r => r.json());
+};
+
+export const approveIncident = async (id, plate) => {
+  return fetch(`${API}/verify/approve`, {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({ id, plate })
+  });
+};
+
+export const getVideoUrl = (filename) => {
+  return `http://localhost:3000/videos/${filename}`;
+};

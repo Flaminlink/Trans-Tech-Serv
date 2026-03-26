@@ -1,0 +1,35 @@
+const express = require("express");
+const fs = require("fs-extra");
+
+const router = express.Router();
+
+router.get("/", async (req, res) => {
+  const files = await fs.readdir("server/storage");
+  const incidents = [];
+
+  for (let f of files) {
+    if (f.endsWith(".json")) {
+      const data = await fs.readJson(`server/storage/${f}`);
+      incidents.push(data);
+    }
+  }
+
+  res.json(incidents);
+});
+
+router.post("/approve", async (req, res) => {
+  const { id, plate } = req.body;
+
+  const file = `server/storage/${id}.json`;
+  const incident = await fs.readJson(file);
+
+  incident.status = "verified";
+  incident.finalPlate = plate;
+  incident.verifiedAt = new Date();
+
+  await fs.writeJson(file, incident);
+
+  res.json({ success: true });
+});
+
+module.exports = router;

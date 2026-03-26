@@ -1,0 +1,27 @@
+const express = require("express");
+const fs = require("fs-extra");
+
+const router = express.Router();
+
+router.get("/", async (req, res) => {
+  const files = await fs.readdir("server/storage");
+
+  let total = 0;
+  let verified = 0;
+
+  for (let f of files) {
+    if (f.endsWith(".json")) {
+      total++;
+      const data = await fs.readJson(`server/storage/${f}`);
+      if (data.status === "verified") verified++;
+    }
+  }
+
+  res.json({
+    total,
+    verified,
+    pending: total - verified
+  });
+});
+
+module.exports = router;

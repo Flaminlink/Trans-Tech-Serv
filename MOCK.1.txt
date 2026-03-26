@@ -1,0 +1,409 @@
+Below is a modern full-stack starter website you can run in VS Code for your pilot system. It follows your pipeline:
+
+Upload → Processing (mock ALPR) → Verification → Evidence → Dashboard
+
+This is a clean MVP architecture you can expand later with real ALPR APIs like Plate Recognizer.
+
+🧱Tech Stack (Simple + Scalable)
+Frontend: HTML, CSS, Vanilla JS (modern UI)
+Backend: Node.js + Express
+Storage: Local (for pilot) → easy to swap to cloud later
+Auth: Basic role simulation (expand later)
+
+Project Structure
+
+alpr-pilot/
+│
+├── server/
+│   ├── server.js
+│   ├── routes/
+│   │   ├── upload.js
+│   │   ├── verify.js
+│   │   └── dashboard.js
+│   ├── services/
+│   │   ├── alprMock.js
+│   │   └── evidence.js
+│   └── storage/
+│
+├── client/
+│   ├── index.html
+│   ├── dashboard.html
+│   ├── verify.html
+│   ├── style.css
+│   └── app.js
+│
+└── package.json
+
+
+
+1.1.⚙️ Backend (Node.js)
+📦 package.json
+
+{
+  "name": "alpr-pilot",
+  "version": "1.0.0",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "multer": "^1.4.5",
+    "cors": "^2.8.5",
+    "uuid": "^9.0.0",
+    "crypto": "^1.0.1",
+    "fs-extra": "^11.1.1"
+  }
+}
+
+
+
+1.2.🚀 server.js
+
+const express = require("express");
+const cors = require("cors");
+
+const uploadRoute = require("./routes/upload");
+const verifyRoute = require("./routes/verify");
+const dashboardRoute = require("./routes/dashboard");
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+app.use("/upload", uploadRoute);
+app.use("/verify", verifyRoute);
+app.use("/dashboard", dashboardRoute);
+
+app.listen(3000, () => {
+  console.log("Server running on http://localhost:3000");
+});
+
+
+
+1.3.📤 Upload Route (Core Pipeline Start)
+
+// routes/upload.js
+const express = require("express");
+const multer = require("multer");
+const crypto = require("crypto");
+const { v4: uuidv4 } = require("uuid");
+const fs = require("fs-extra");
+const path = require("path");
+
+const router = express.Router();
+
+const storage = multer.diskStorage({
+  destination: "server/storage/videos/",
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + "-" + file.originalname);
+  }
+});
+
+const upload = multer({ storage });
+
+router.post("/", upload.single("video"), async (req, res) => {
+  const filePath = req.file.path;
+
+  // Generate SHA-256
+  const fileBuffer = fs.readFileSync(filePath);
+  const hash = crypto.createHash("sha256").update(fileBuffer).digest("hex");
+
+  const incidentId = uuidv4();
+
+  const incident = {
+    id: incidentId,
+    file: filePath,
+    hash,
+    metadata: req.body,
+    status: "uploaded",
+    createdAt: new Date(),
+    detections: []
+  };
+
+  await fs.writeJson(`server/storage/${incidentId}.json`, incident);
+
+  res.json({ message: "Uploaded", incidentId });
+});
+
+module.exports = router;
+
+
+
+1.4.🤖 Mock ALPR Service (Replace Later)
+// services/alprMock.js
+function fakeALPR() {
+  return [
+    {
+      plate: "PBX1234",
+      confidence: Math.random().toFixed(2),
+      timestamp: Date.now()
+    }
+  ];
+}
+
+module.exports = { fakeALPR };
+
+
+
+1.5.🔍 Verification Route
+// routes/verify.js
+const express = require("express");
+const fs = require("fs-extra");
+
+const router = express.Router();
+
+// Get all incidents
+router.get("/", async (req, res) => {
+  const files = await fs.readdir("server/storage");
+  const incidents = [];
+
+  for (let f of files) {
+    if (f.endsWith(".json")) {
+      const data = await fs.readJson(`server/storage/${f}`);
+      incidents.push(data);
+    }
+  }
+
+  res.json(incidents);
+});
+
+// Approve plate
+router.post("/approve", async (req, res) => {
+  const { id, plate } = req.body;
+
+  const file = `server/storage/${id}.json`;
+  const incident = await fs.readJson(file);
+
+  incident.status = "verified";
+  incident.finalPlate = plate;
+  incident.verifiedAt = new Date();
+
+  await fs.writeJson(file, incident);
+
+  res.json({ message: "Approved" });
+});
+
+module.exports = router;
+
+
+1.6.📊 Dashboard Route
+// routes/dashboard.js
+const express = require("express");
+const fs = require("fs-extra");
+
+const router = express.Router();
+
+router.get("/", async (req, res) => {
+  const files = await fs.readdir("server/storage");
+
+  let total = 0;
+  let verified = 0;
+
+  for (let f of files) {
+    if (f.endsWith(".json")) {
+      total++;
+      const data = await fs.readJson(`server/storage/${f}`);
+      if (data.status === "verified") verified++;
+    }
+  }
+
+  res.json({
+    total,
+    verified,
+    pending: total - verified
+  });
+});
+
+module.exports = router;
+
+🎨 
+
+
+2. Frontend 🏠 index.html (Upload UI)
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ALPR Pilot</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h1>Upload Incident</h1>
+
+<form id="uploadForm">
+  <input type="file" name="video" required />
+
+  <select name="category">
+    <option>Reckless Driving</option>
+    <option>Dangerous Overtaking</option>
+    <option>Collision</option>
+  </select>
+
+  <textarea name="notes" placeholder="Notes"></textarea>
+
+  <label>
+    <input type="checkbox" required />
+    I consent to data processing
+  </label>
+
+  <button type="submit">Upload</button>
+</form>
+
+<script src="app.js"></script>
+</body>
+</html>
+
+
+
+2.1.🧠  app.js
+const form = document.getElementById("uploadForm");
+
+form?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const formData = new FormData(form);
+
+  const res = await fetch("http://localhost:3000/upload", {
+    method: "POST",
+    body: formData
+  });
+
+  const data = await res.json();
+  alert("Uploaded: " + data.incidentId);
+});
+
+
+2.2.📊 dashboard.html
+<h1>Dashboard</h1>
+<div id="stats"></div>
+
+<script>
+async function load() {
+  const res = await fetch("http://localhost:3000/dashboard");
+  const data = await res.json();
+
+  document.getElementById("stats").innerHTML = `
+    <p>Total: ${data.total}</p>
+    <p>Verified: ${data.verified}</p>
+    <p>Pending: ${data.pending}</p>
+  `;
+}
+
+load();
+</script>
+
+
+2.4.🔍 verify.html
+<h1>Verification</h1>
+<div id="list"></div>
+
+<script>
+async function load() {
+  const res = await fetch("http://localhost:3000/verify");
+  const data = await res.json();
+
+  const container = document.getElementById("list");
+
+  data.forEach(item => {
+    const div = document.createElement("div");
+
+    div.innerHTML = `
+      <p>ID: ${item.id}</p>
+      <p>Status: ${item.status}</p>
+      <input placeholder="Plate" id="plate-${item.id}" />
+      <button onclick="approve('${item.id}')">Approve</button>
+      <hr/>
+    `;
+
+    container.appendChild(div);
+  });
+}
+
+async function approve(id) {
+  const plate = document.getElementById(`plate-${id}`).value;
+
+  await fetch("http://localhost:3000/verify/approve", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ id, plate })
+  });
+
+  alert("Approved");
+  location.reload();
+}
+
+load();
+</script>
+
+
+
+2.3🎨 style.css
+body {
+  font-family: Arial;
+  background: #0f172a;
+  color: white;
+  padding: 20px;
+}
+
+h1 {
+  color: #38bdf8;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 400px;
+}
+
+button {
+  background: #38bdf8;
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+}
+
+
+
+✅ What This MVP Already Does
+
+✔ Upload dashcam video
+✔ Generate SHA-256 hash
+✔ Store incident with metadata
+✔ Assign unique ID
+✔ Verification dashboard
+✔ Approve/reject flow
+✔ Basic analytics dashboard
+
+🚀 What You Should Add Next (Important)
+
+To match your full pilot scope, your next steps:
+
+🔥 Priority Upgrades
+Real ALPR API
+Integrate Plate Recognizer API
+
+Frame Extraction
+
+Use ffmpeg:
+ffmpeg -i video.mp4 -vf fps=2 frames/output_%03d.jpg
+Frame Filtering
+Blur detection (OpenCV)
+Evidence Pack Generator
+PDF (pdfkit)
+ZIP (archiver)
+Authentication (Roles)
+Uploader / Reviewer / Admin
+Audit Logging System
+Cloud Storage (AWS S3 or similar)
+💡 Architecture Advice (Important)
+Keep video immutable
+Never overwrite files
+Log EVERYTHING (critical for legal defensibility)
+Separate:
+ingestion
+processing
+verification
+

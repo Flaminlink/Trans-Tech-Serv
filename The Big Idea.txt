@@ -1,0 +1,208 @@
+MOCK 1.
+
+
+🧠 The Big Idea (In Plain English)
+
+You are building a website that does this:
+
+👉 Someone uploads a dashcam video
+👉 The system scans it for license plates
+👉 A human checks the result (to avoid mistakes)
+👉 The system creates a clean “evidence report”
+
+Think of it like:
+
+“Upload video → Find plate → Confirm → Generate proof”
+
+🧱 How the Website is Structured
+
+Your project has 2 main parts:
+
+1. Frontend (What users see)
+
+This is the website pages:
+
+Upload page
+Dashboard
+Verification screen
+
+👉 Built with:
+
+HTML (structure)
+CSS (design)
+JavaScript (interaction)
+2. Backend (The brain)
+
+This runs behind the scenes and:
+
+Receives uploads
+Stores files
+Processes data
+Tracks incidents
+
+👉 Built with:
+
+Node.js (server)
+Express (routing system)
+🔄 Step-by-Step Flow (Simple Version)
+1. Upload Step (User side)
+
+A driver goes to your site and:
+
+Uploads a video
+Selects what happened (reckless driving, etc.)
+Adds notes
+Clicks submit
+
+👉 Your system then:
+
+Saves the video
+Gives it a unique ID
+Creates a digital fingerprint (hash)
+(like a tamper-proof signature)
+🔐 What is a “Hash”? (Super Simple)
+
+A hash is like:
+
+🔑 A unique code for a file
+
+If the video changes even slightly → the hash changes.
+
+👉 This proves:
+
+The video was NOT edited
+It is valid evidence
+2. Storage Step
+
+The system saves:
+
+The video file
+A small data file (JSON) with:
+incident ID
+notes
+status
+hash
+
+Think of it like:
+
+A folder per incident with all its details
+
+3. ALPR Step (Plate Detection)
+
+Right now, your system uses a fake detector (mock).
+
+👉 In real life, this will:
+
+Break video into images (frames)
+Scan each frame
+Try to read license plates
+
+Example result:
+
+Plate: PBX1234
+Confidence: 92%
+4. Verification Step (VERY IMPORTANT)
+
+A human reviewer sees:
+
+The video
+Detected plates
+Incident details
+
+They must choose:
+
+✅ Approve plate
+❌ Reject plate
+⚠️ Not enough evidence
+
+👉 This step exists because:
+
+AI can be wrong — humans make it reliable
+
+5. Dashboard (Overview)
+
+This shows:
+
+Total uploads
+Verified cases
+Pending cases
+
+👉 Think of it like a control panel.
+
+6. Evidence Pack (Future Step)
+
+Once approved, the system will generate:
+
+📁 A package with:
+
+Original video
+Plate number
+Snapshots (frames)
+Metadata (time, category)
+Verification record
+
+Formats:
+
+PDF (for humans)
+JSON (for systems)
+ZIP (everything together)
+🔐 Security (Why Your Design is Smart)
+
+Your system already follows good rules:
+
+✔ Videos cannot be changed
+
+Stored safely after upload
+
+✔ Everything is tracked
+Who uploaded
+When
+What happened
+✔ Human verification required
+
+No automatic accusations
+
+🚗 Real-World Example
+
+Let’s say:
+
+A driver records reckless driving
+Uploads video
+System scans → finds plate “PBX1234”
+Reviewer confirms it's correct
+System generates report
+
+👉 That report can be used by:
+
+Fleet managers
+Insurance companies
+⚠️ What This Version DOES NOT Do Yet
+
+Right now your system:
+
+❌ Doesn’t actually scan real plates (mock only)
+❌ Doesn’t extract frames yet
+❌ Doesn’t generate PDFs yet
+❌ Doesn’t have login system
+🚀 What You Built (In One Sentence)
+
+A working prototype of a system that collects dashcam footage, tracks incidents, and allows human-reviewed license plate reporting.
+
+🧭 Simple Analogy
+
+Think of your system like:
+
+🏢 A digital police desk (but private for fleets)
+
+Upload = filing a report
+ALPR = officer scanning footage
+Verification = supervisor checking
+Evidence pack = official case file
+👍 What You Should Do Next
+
+The most important upgrades:
+
+Real plate detection (ALPR API)
+Frame extraction (video → images)
+Login system (roles)
+Evidence report generation

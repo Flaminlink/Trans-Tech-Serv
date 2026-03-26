@@ -1,0 +1,43 @@
+const express = require("express");
+const multer = require("multer");
+const crypto = require("crypto");
+const { v4: uuidv4 } = require("uuid");
+const fs = require("fs-extra");
+
+fs.ensureDirSync("server/storage/videos");
+
+const router = express.Router();
+
+const storage = multer.diskStorage({
+  destination: "server/storage/videos/",
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + "-" + file.originalname);
+  }
+});
+
+const upload = multer({ storage });
+
+router.post("/", upload.single("video"), async (req, res) => {
+  const filePath = req.file.path;
+
+  const fileBuffer = fs.readFileSync(filePath);
+  const hash = crypto.createHash("sha256").update(fileBuffer).digest("hex");
+
+  const incidentId = uuidv4();
+
+  const incident = {
+    id: incidentId,
+    file: filePath,
+    filename: req.file.filename,
+    hash,
+    metadata: req.body,
+    status: "uploaded",
+    createdAt: new Date()
+  };
+
+  await fs.writeJson(`server/storage/${incidentId}.json`, incident);
+
+  res.json({ incidentId });
+});
+
+module.exports = router;

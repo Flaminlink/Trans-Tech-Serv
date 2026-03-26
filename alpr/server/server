@@ -1,0 +1,21 @@
+const express = require("express");
+const cors = require("cors");
+
+const uploadRoute = require("./routes/upload");
+const verifyRoute = require("./routes/verify");
+const dashboardRoute = require("./routes/dashboard");
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+// Serve videos publicly
+app.use("/videos", express.static("server/storage/videos"));
+
+app.use("/upload", uploadRoute);
+app.use("/verify", verifyRoute);
+app.use("/dashboard", dashboardRoute);
+
+app.listen(3000, () => {
+  console.log("Server running on http://localhost:3000");
+});
