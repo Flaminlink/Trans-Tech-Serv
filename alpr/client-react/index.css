@@ -1,0 +1,370 @@
+import React, { useMemo, useState } from "react";
+import {
+  Upload,
+  LayoutDashboard,
+  ShieldCheck,
+  Video,
+  FileUp,
+  Search,
+  CheckCircle2,
+  Clock3,
+  CarFront,
+} from "lucide-react";
+
+const mockIncidents = [
+  {
+    id: 1042,
+    filename: "cam-east-1042.mp4",
+    timestamp: "2026-03-24 14:32",
+    status: "pending",
+  },
+  {
+    id: 1041,
+    filename: "cam-west-1041.mp4",
+    timestamp: "2026-03-24 09:11",
+    status: "verified",
+    plate: "PBX-4821",
+  },
+  {
+    id: 1040,
+    filename: "cam-main-1040.mp4",
+    timestamp: "2026-03-23 18:47",
+    status: "pending",
+  },
+];
+
+const dashboard = {
+  total: 128,
+  verified: 94,
+  pending: 34,
+};
+
+function NavButton({ active, onClick, icon: Icon, children }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-medium transition ${
+        active
+          ? "bg-slate-900 text-white shadow-lg"
+          : "bg-white text-slate-700 border border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+      }`}
+    >
+      <Icon className="h-4 w-4" />
+      {children}
+    </button>
+  );
+}
+
+function StatCard({ title, value, icon: Icon, hint }) {
+  return (
+    <div className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-sm text-slate-500">{title}</p>
+          <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">
+            {value}
+          </p>
+          <p className="mt-2 text-xs text-slate-500">{hint}</p>
+        </div>
+        <div className="rounded-2xl bg-slate-100 p-3">
+          <Icon className="h-5 w-5 text-slate-700" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function UploadPage() {
+  const [fileName, setFileName] = useState("site-entry-footage.mp4");
+
+  return (
+    <div className="grid gap-6 lg:grid-cols-[1.1fr,0.9fr]">
+      <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+        <div className="flex items-center gap-3">
+          <div className="rounded-2xl bg-blue-50 p-3">
+            <FileUp className="h-5 w-5 text-blue-700" />
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold text-slate-900">
+              Upload Incident Video
+            </h2>
+            <p className="text-sm text-slate-500">
+              This mirrors your Upload component with a file input and upload
+              action.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-6 rounded-3xl border-2 border-dashed border-slate-300 bg-slate-50 p-8 text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-slate-200">
+            <Upload className="h-7 w-7 text-slate-700" />
+          </div>
+          <p className="mt-4 text-base font-medium text-slate-900">
+            Choose a video file
+          </p>
+          <p className="mt-1 text-sm text-slate-500">
+            Drag and drop or browse from your device
+          </p>
+
+          <label className="mt-5 inline-flex cursor-pointer items-center justify-center rounded-2xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-lg hover:opacity-95">
+            Select file
+            <input
+              type="file"
+              className="hidden"
+              onChange={(e) => {
+                const name = e.target.files?.[0]?.name;
+                if (name) setFileName(name);
+              }}
+            />
+          </label>
+        </div>
+
+        <div className="mt-5 flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3 ring-1 ring-slate-200">
+          <div className="flex items-center gap-3">
+            <Video className="h-4 w-4 text-slate-500" />
+            <span className="text-sm text-slate-700">{fileName}</span>
+          </div>
+          <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
+            Ready
+          </span>
+        </div>
+
+        <button className="mt-5 rounded-2xl bg-blue-600 px-5 py-3 text-sm font-medium text-white shadow-lg hover:bg-blue-700">
+          Upload
+        </button>
+      </div>
+
+      <div className="rounded-3xl bg-slate-900 p-6 text-white shadow-sm">
+        <h3 className="text-lg font-semibold">Expected flow</h3>
+        <div className="mt-5 space-y-4">
+          {[
+            "Upload video footage",
+            "Backend creates incident ID",
+            "Incident appears in review queue",
+            "Operator enters detected plate and approves",
+          ].map((step, i) => (
+            <div key={step} className="flex items-start gap-3">
+              <div className="mt-0.5 flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-xs font-semibold">
+                {i + 1}
+              </div>
+              <p className="text-sm text-slate-200">{step}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DashboardPage() {
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-4 md:grid-cols-3">
+        <StatCard
+          title="Total"
+          value={dashboard.total}
+          icon={CarFront}
+          hint="All captured incidents"
+        />
+        <StatCard
+          title="Verified"
+          value={dashboard.verified}
+          icon={CheckCircle2}
+          hint="Reviewed and approved"
+        />
+        <StatCard
+          title="Pending"
+          value={dashboard.pending}
+          icon={Clock3}
+          hint="Awaiting operator action"
+        />
+      </div>
+
+      <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-semibold text-slate-900">
+              System Summary
+            </h2>
+            <p className="text-sm text-slate-500">
+              Your current Dashboard component is just 3 cards, so this is the
+              natural visual direction.
+            </p>
+          </div>
+          <div className="rounded-2xl bg-slate-100 px-3 py-2 text-xs font-medium text-slate-700">
+            Live overview
+          </div>
+        </div>
+
+        <div className="mt-6 grid gap-4 lg:grid-cols-2">
+          <div className="rounded-2xl bg-slate-50 p-5 ring-1 ring-slate-200">
+            <p className="text-sm font-medium text-slate-700">
+              Verification rate
+            </p>
+            <div className="mt-3 h-3 overflow-hidden rounded-full bg-slate-200">
+              <div className="h-full w-[73%] rounded-full bg-slate-900" />
+            </div>
+            <p className="mt-2 text-sm text-slate-500">
+              73% of incidents verified
+            </p>
+          </div>
+
+          <div className="rounded-2xl bg-slate-50 p-5 ring-1 ring-slate-200">
+            <p className="text-sm font-medium text-slate-700">Queue health</p>
+            <div className="mt-3 flex gap-2">
+              <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800">
+                34 pending
+              </span>
+              <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-800">
+                94 resolved
+              </span>
+            </div>
+            <p className="mt-2 text-sm text-slate-500">
+              Useful if you later expand the dashboard beyond card counts.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ReviewPage() {
+  const [plates, setPlates] = useState(() =>
+    Object.fromEntries(mockIncidents.map((x) => [x.id, x.plate || ""]))
+  );
+
+  const pending = useMemo(() => mockIncidents, []);
+
+  return (
+    <div className="space-y-4">
+      {pending.map((item) => (
+        <div
+          key={item.id}
+          className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200"
+        >
+          <div className="flex flex-col gap-5 lg:flex-row">
+            <div className="w-full max-w-md overflow-hidden rounded-2xl bg-slate-900">
+              <div className="flex aspect-video items-center justify-center bg-gradient-to-br from-slate-800 to-slate-950 text-slate-300">
+                <div className="text-center">
+                  <Video className="mx-auto h-8 w-8" />
+                  <p className="mt-2 text-sm">Video preview placeholder</p>
+                  <p className="text-xs opacity-75">{item.filename}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex-1">
+              <div className="flex flex-wrap items-center gap-3">
+                <h3 className="text-lg font-semibold text-slate-900">
+                  Incident #{item.id}
+                </h3>
+                <span
+                  className={`rounded-full px-3 py-1 text-xs font-medium ${
+                    item.status === "verified"
+                      ? "bg-emerald-100 text-emerald-800"
+                      : "bg-amber-100 text-amber-800"
+                  }`}
+                >
+                  {item.status}
+                </span>
+              </div>
+
+              <p className="mt-2 text-sm text-slate-500">
+                Captured: {item.timestamp}
+              </p>
+
+              <div className="mt-5 max-w-sm">
+                <label className="mb-2 block text-sm font-medium text-slate-700">
+                  Plate
+                </label>
+
+                <div className="flex gap-3">
+                  <div className="relative flex-1">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <input
+                      value={plates[item.id]}
+                      onChange={(e) =>
+                        setPlates((prev) => ({
+                          ...prev,
+                          [item.id]: e.target.value.toUpperCase(),
+                        }))
+                      }
+                      placeholder="Enter plate"
+                      className="w-full rounded-2xl border border-slate-300 bg-white py-3 pl-10 pr-4 text-sm outline-none placeholder:text-slate-400 focus:border-slate-900"
+                    />
+                  </div>
+
+                  <button className="rounded-2xl bg-slate-900 px-4 py-3 text-sm font-medium text-white hover:opacity-95">
+                    Approve
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default function App() {
+  const [page, setPage] = useState("upload");
+
+  return (
+    <div className="min-h-screen bg-slate-100 text-slate-900">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mb-8 rounded-[28px] bg-gradient-to-r from-slate-950 via-slate-900 to-blue-900 p-6 text-white shadow-2xl">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-slate-200">
+                <ShieldCheck className="h-3.5 w-3.5" />
+                ALPR monitoring interface
+              </div>
+
+              <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+                ALPR System
+              </h1>
+
+              <p className="mt-2 max-w-2xl text-sm text-slate-300 sm:text-base">
+                This preview is inferred from your React components and fills in
+                the missing styling so the interface looks like a usable
+                operations dashboard.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              <NavButton
+                active={page === "upload"}
+                onClick={() => setPage("upload")}
+                icon={Upload}
+              >
+                Upload
+              </NavButton>
+
+              <NavButton
+                active={page === "dashboard"}
+                onClick={() => setPage("dashboard")}
+                icon={LayoutDashboard}
+              >
+                Dashboard
+              </NavButton>
+
+              <NavButton
+                active={page === "review"}
+                onClick={() => setPage("review")}
+                icon={ShieldCheck}
+              >
+                Review
+              </NavButton>
+            </div>
+          </div>
+        </div>
+
+        {page === "upload" && <UploadPage />}
+        {page === "dashboard" && <DashboardPage />}
+        {page === "review" && <ReviewPage />}
+      </div>
+    </div>
+  );
+}
